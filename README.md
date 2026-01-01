@@ -2,17 +2,17 @@
 
 A simple Go application to manage and restart [Gluetun](https://github.com/qdm12/gluetun) VPN containers remotely. This tool is designed to facilitate the update of the Public IP address for external tools that rely on a VPN connection.
 
-## 🚀 Purpose
+## Purpose
 
 The main goal is to allow external services or scripts to trigger a restart of a specific Gluetun container to rotate the IP address. It provides a simple HTTP API to restart the container and waits until the new IP is acquired and verified.
 
-## 💡 Context (Why use this?)
+## Context (Why use this?)
 
 This tool is particularly useful when using **ProtonVPN** with the **WireGuard** protocol.
 
 While OpenVPN implementations often allow IP rotation via standard HTTP control signals, rotating IPs with WireGuard on ProtonVPN (and similar providers) is often most reliably achieved by simply restarting the container to force a fresh connection to a new endpoint (assuming your container is configured to select random servers). This tool automates that process safely.
 
-## ⚠️ Security Notice
+## Security Notice
 
 **This application DOES NOT implement any authentication mechanism.**
 
@@ -62,13 +62,13 @@ curl -X POST http://localhost:6968/restart \
 }
 ```
 
-## ⚙️ Configuration
+## Configuration
 
 The application is configured via environment variables (or a `.env` file):
 
 - `SERVER_IP`: The IP address of the server (required).
 - `SERVER_PORT`: The port for this API manager (default: 6968).
 
-## 🐋 Docker
+## Docker
 
 You can run this manager alongside your other containers. Ensure it has access to the Docker socket (`/var/run/docker.sock`) to perform container restarts.
