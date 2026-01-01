@@ -8,23 +8,23 @@ import (
 )
 
 func GetContainerInfo(containerName string) (string, error) {
-	// Crear cliente Docker
+	// Create Docker client
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return "", fmt.Errorf("error while creating Docker client: %v", err)
 	}
 	defer cli.Close()
 
-	// Crear contexto
+	// Create context
 	ctx := context.Background()
 
-	// Inspeccionar contenedor
+	// Inspect container
 	containerJSON, err := cli.ContainerInspect(ctx, containerName)
 	if err != nil {
 		return "", fmt.Errorf("error while inspecting container '%s': %v", containerName, err)
 	}
 
-	// Construir información del contenedor
+	// Build container information
 	var output string
 	output += "=================================================\n"
 	output += fmt.Sprintf("Container '%s' information:\n", containerName)
@@ -43,7 +43,7 @@ func GetContainerInfo(containerName string) (string, error) {
 		output += fmt.Sprintf("Exit code: %d\n", containerJSON.State.ExitCode)
 	}
 
-	// Mostrar puertos
+	// Show ports
 	if len(containerJSON.NetworkSettings.Ports) > 0 {
 		output += "\nPorts:\n"
 		for port, bindings := range containerJSON.NetworkSettings.Ports {

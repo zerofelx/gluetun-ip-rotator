@@ -1,24 +1,21 @@
-package main
+package restart_container
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
-	"github.com/joho/godotenv"
 )
 
 type IPResponse struct {
 	PublicIP string `json:"public_ip"`
 }
 
-// Hace una petición GET a la API del container de Gluetun para conocer la IP Pública
+// Make a GET request to the Gluetun container API to get the Public IP
 func getGluetunIP(apiURL string) (string, error) {
 	resp, err := http.Get(apiURL + "/v1/publicip/ip")
 	if err != nil {
@@ -55,23 +52,18 @@ func waitForConnection(apiURL string, maxWait time.Duration) (string, error) {
 	}
 }
 
-func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Println("Error loading .env file")
-	}
-	ip := os.Getenv("SERVER_IP")
-	containerName := "gluetun-1"
-	gluetunAPIURL := "http://" + ip + ":6969"
-
+// RestartContainer restarts the specified container and waits for a new IP.
+// Returns newIP, oldIP, error.
+func RestartContainer(containerName string, ip string, port string) (string, string, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		log.Fatalf("Error creating Docker client: %v", err)
+		return "", "", fmt.Errorf("error creating Docker client: %v", err)
 	}
-
 	defer cli.Close()
 
 	ctx := context.Background()
+
+	gluetunAPIURL := "http://" + ip + ":" + port
 
 	fmt.Printf("Container: %s\n", containerName)
 
@@ -87,7 +79,7 @@ func main() {
 	timeout := 30 // Seconds
 	err = cli.ContainerRestart(ctx, containerName, container.StopOptions{Timeout: &timeout})
 	if err != nil {
-		log.Fatalf("Error restarting Gluetun container: %v", err)
+		return "", oldIP, fmt.Errorf("error restarting Gluetun container: %v", err)
 	}
 
 	fmt.Println("Container restarted.")
@@ -96,17 +88,11 @@ func main() {
 
 	newIP, err := waitForConnection(gluetunAPIURL, 60*time.Second)
 	if err != nil {
-		log.Fatalf("\nError waiting for Gluetun to start: %v", err)
+		return "", oldIP, fmt.Errorf("error waiting for Gluetun to start: %v", err)
 	}
 
 	fmt.Println("Reconnected to Gluetun.")
 	fmt.Printf("Old IP: %s\nNew IP: %s\n", oldIP, newIP)
 
-	if oldIP != "unknown" && oldIP == newIP {
-		fmt.Println("IP has not changed.")
-	} else if oldIP != "unknown" {
-		fmt.Println("IP has changed.")
-	} else {
-		fmt.Println("IP is unknown.")
-	}
+	return newIP, oldIP, nil
 }
