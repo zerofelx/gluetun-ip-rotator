@@ -20,7 +20,7 @@ It is strongly recommended to use this tool **ONLY** within a secure, private ne
 
 Authentication can be added (e.g., Basic Auth or Token-based) if required for your specific use case.
 
-## 🛠 Usage
+## Usage
 
 ### Prerequisites
 - Docker
